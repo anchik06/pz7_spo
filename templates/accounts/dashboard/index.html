@@ -1,13 +1,10 @@
-
 {% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
 
 <!-- Стили аналитического раздела -->
-<link rel="stylesheet"
-      href="{% static 'accounts/dashboard/dashboard.css' %}">
-
+<link rel="stylesheet" href="{% static 'dashboard.css' %}">
 <div class="container-xl py-4"
      id="dashboard-root"
      data-api="{% url 'dashboard_api' %}"
@@ -200,10 +197,8 @@
 
 </div>
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
 
-<!-- JavaScript аналитики -->
-<script src="{% static 'accounts/dashboard/dashboard.js' %}?v=3"></script>
+<script src="{% static 'dashboard.js' %}?v=4"></script>
 
 {% endblock %}

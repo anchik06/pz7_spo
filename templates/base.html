@@ -7,16 +7,9 @@
 
     <title>{% block title %}Учебное приложение{% endblock %}</title>
 
-    <link
-        rel="stylesheet"
-        href="{% static 'vendor/tabler/css/tabler.min.css' %}"
-    >
-    <link
-        rel="stylesheet"
-        href="{% static 'vendor/tabler/icons/tabler-icons.min.css' %}"
-    >
-
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'tabler.min.css' %}">
+    <link rel="stylesheet" href="{% static 'tabler-icons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -67,6 +60,9 @@
                     <a class="nav-link" href="{% url 'dashboard_overview' %}">
                         <i class="ti ti-chart-bar me-2"></i>
                         Аналитика
+                    </a>
+                    <a class="nav-link" href="{% url 'tickets_page' %}">
+                    Заявки
                     </a>
                 </div>
                 {% endif %}
@@ -133,7 +129,7 @@
     </div>
 </div>
 
-<script src="{% static 'vendor/tabler/js/tabler.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
 
 {% block extra_js %}{% endblock %}
 

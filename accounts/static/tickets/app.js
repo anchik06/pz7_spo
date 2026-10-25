@@ -101,10 +101,14 @@ async function loadTickets() {
     const query = params.toString();
     const url = "/api/tickets/" + (query ? "?" + query : "");
 
+    const statusNames = {
+        new: "Новая",
+        progress: "В работе",
+        done: "Выполнена"
+    };
 
     try {
         const tickets = await apiRequest(url);
-
         list.replaceChildren();
 
         if (tickets.length === 0) {
@@ -117,7 +121,8 @@ async function loadTickets() {
         for (const ticket of tickets) {
             const row = document.createElement("div");
             row.className =
-                "d-flex justify-content-between align-items-center border-bottom py-3 gap-3";
+                "d-flex flex-wrap align-items-center " +
+                "justify-content-between border-bottom py-3 gap-3";
 
             const title = document.createElement("div");
             title.textContent =
@@ -125,14 +130,76 @@ async function loadTickets() {
 
             const status = document.createElement("span");
             status.className = "badge bg-blue-lt";
-            status.textContent = ticket.status;
+            status.textContent = statusNames[ticket.status];
 
-            row.append(title, status);
+            const actions = document.createElement("div");
+            actions.className = "d-flex flex-wrap gap-2";
+
+            const select = document.createElement("select");
+            select.className = "form-select w-auto";
+            select.setAttribute(
+                "aria-label",
+                "Новый статус заявки «" + ticket.title + "»"
+            );
+
+            const option = document.createElement("option");
+
+            if (ticket.status === "new") {
+                option.value = "progress";
+                option.textContent = "В работе";
+            } else if (ticket.status === "progress") {
+                option.value = "done";
+                option.textContent = "Выполнена";
+            } else {
+                option.value = "done";
+                option.textContent = "Выполнена";
+                select.disabled = true;
+            }
+
+            select.append(option);
+
+            const changeButton = document.createElement("button");
+            changeButton.type = "button";
+            changeButton.className = "btn btn-primary";
+            changeButton.textContent = "Изменить статус";
+            changeButton.disabled = ticket.status === "done";
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "btn btn-danger";
+            deleteButton.textContent = "Удалить";
+
+            changeButton.addEventListener("click", async () => {
+                changeButton.disabled = true;
+                deleteButton.disabled = true;
+
+                try {
+                    await changeStatus(ticket.id, select.value);
+                } finally {
+                    changeButton.disabled = ticket.status === "done";
+                    deleteButton.disabled = false;
+                }
+            });
+
+            deleteButton.addEventListener("click", async () => {
+                changeButton.disabled = true;
+                deleteButton.disabled = true;
+
+                try {
+                    await deleteTicket(ticket.id, ticket.title);
+                } finally {
+                    changeButton.disabled = ticket.status === "done";
+                    deleteButton.disabled = false;
+                }
+            });
+
+            actions.append(select, changeButton, deleteButton);
+            row.append(title, status, actions);
             list.append(row);
         }
     } catch (error) {
         showMessage(
-            "Не удалось загрузить заявки: " + error.message,
+            "Не удалось загрузить заявки: " + getErrorText(error),
             true
         );
     } finally {
@@ -142,6 +209,70 @@ async function loadTickets() {
 
 filter.addEventListener("change", loadTickets);
 
+
+function getErrorText(error) {
+    try {
+        const data = JSON.parse(error.message);
+        const errors = [];
+
+        for (const key in data) {
+            const value = data[key];
+
+            if (Array.isArray(value)) {
+                errors.push(value.join(" "));
+            } else {
+                errors.push(String(value));
+            }
+        }
+
+        return errors.join(" ");
+    } catch {
+        return error.message;
+    }
+}
+
+async function changeStatus(ticketId, newStatus) {
+    try {
+        await apiRequest(`/api/tickets/${ticketId}/`, {
+            method: "PATCH",
+            body: JSON.stringify({
+                status: newStatus
+            })
+        });
+    } catch (error) {
+        showMessage(
+            "Не удалось изменить статус: " + getErrorText(error),
+            true
+        );
+        return;
+    }
+
+    showMessage("Статус заявки изменён");
+    await loadTickets();
+}
+
+async function deleteTicket(ticketId, ticketTitle) {
+    const confirmed = confirm(
+        `Удалить заявку «${ticketTitle}»?`
+    );
+    if (!confirmed) {
+        return;
+    }
+    try {
+        await apiRequest(`/api/tickets/${ticketId}/`, {
+            method: "DELETE"
+        });
+    } catch (error) {
+        showMessage(
+            "Не удалось удалить заявку: " + getErrorText(error),
+            true
+        );
+        return;
+    }
+
+    showMessage("Заявка удалена");
+    await loadTickets();
+}
 async function initialize() {
     try {
         await loadCategories();
@@ -155,30 +286,3 @@ async function initialize() {
 }
 
 initialize();
-
-async function changeStatus(ticketId, newStatus) {
-    await apiRequest(`/api/tickets/${ticketId}/`, {
-        method: "PATCH",
-        body: JSON.stringify({
-            status: newStatus
-        })
-    });
-
-    await loadTickets();
-}
-Удаление:
-async function deleteTicket(ticketId, ticketTitle) {
-    const confirmed = confirm(
-        `Удалить заявку «${ticketTitle}»?`
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
-    await apiRequest(`/api/tickets/${ticketId}/`, {
-        method: "DELETE"
-    });
-    await loadTickets();
-}
-

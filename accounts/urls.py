@@ -21,11 +21,8 @@ router.register(
 )
 
 urlpatterns = [
-    path("", dashboard, name="dashboard"),
+    path("tickets/", views.dashboard, name="tickets_page"),
     path("api/", include(router.urls)),
-]
-
-urlpatterns = [
     path('profile/', views.profile, name='profile'),
 
     path('departments/', views.department_list, name='department_list'),
