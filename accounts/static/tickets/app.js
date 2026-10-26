@@ -80,7 +80,7 @@ form.addEventListener("submit", async (event) => {
         await loadTickets();
     } catch (error) {
         showMessage(
-            "Не удалось создать заявку: " + error.message,
+            "Не удалось создать заявку: " + getErrorText(error),
             true
         );
     }
@@ -213,19 +213,19 @@ filter.addEventListener("change", loadTickets);
 function getErrorText(error) {
     try {
         const data = JSON.parse(error.message);
-        const errors = [];
+        const messages = [];
 
         for (const key in data) {
             const value = data[key];
 
             if (Array.isArray(value)) {
-                errors.push(value.join(" "));
+                messages.push(value.join(" "));
             } else {
-                errors.push(String(value));
+                messages.push(String(value));
             }
         }
 
-        return errors.join(" ");
+        return messages.join(" ");
     } catch {
         return error.message;
     }
